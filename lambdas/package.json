@@ -9,7 +9,8 @@
     "@types/uuid": "*"
   },
   "dependencies": {
-    "aws-sdk": "*",
-    "uuid": "*"
+    "@aws-sdk/client-dynamodb": "^3.476.0",
+    "@aws-sdk/lib-dynamodb": "^3.476.0",
+    "uuid": "^9.0.1"
   }
 }
