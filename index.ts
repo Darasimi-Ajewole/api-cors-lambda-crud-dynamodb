@@ -1,7 +1,7 @@
 import { IResource, LambdaIntegration, MockIntegration, PassthroughBehavior, RestApi } from 'aws-cdk-lib/aws-apigateway';
 import { AttributeType, Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
-import { App, Stack, RemovalPolicy } from 'aws-cdk-lib';
+import { App, Stack, RemovalPolicy, Tags } from 'aws-cdk-lib';
 import { NodejsFunction, NodejsFunctionProps } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { join } from 'path'
 
@@ -41,23 +41,23 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
 
     // Create a Lambda function for each of the CRUD operations
     const getOneLambda = new NodejsFunction(this, 'getOneItemFunction', {
-      entry: join(__dirname, 'lambdas', 'get-one.ts'),
+      entry: join(__dirname, 'lambdas/src', 'get-one.ts'),
       ...nodeJsFunctionProps,
     });
     const getAllLambda = new NodejsFunction(this, 'getAllItemsFunction', {
-      entry: join(__dirname, 'lambdas', 'get-all.ts'),
+      entry: join(__dirname, 'lambdas/src', 'get-all.ts'),
       ...nodeJsFunctionProps,
     });
     const createOneLambda = new NodejsFunction(this, 'createItemFunction', {
-      entry: join(__dirname, 'lambdas', 'create.ts'),
+      entry: join(__dirname, 'lambdas/src', 'create.ts'),
       ...nodeJsFunctionProps,
     });
     const updateOneLambda = new NodejsFunction(this, 'updateItemFunction', {
-      entry: join(__dirname, 'lambdas', 'update-one.ts'),
+      entry: join(__dirname, 'lambdas/src', 'update-one.ts'),
       ...nodeJsFunctionProps,
     });
     const deleteOneLambda = new NodejsFunction(this, 'deleteItemFunction', {
-      entry: join(__dirname, 'lambdas', 'delete-one.ts'),
+      entry: join(__dirname, 'lambdas/src', 'delete-one.ts'),
       ...nodeJsFunctionProps,
     });
 
@@ -82,6 +82,8 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
       // In case you want to manage binary types, uncomment the following
       // binaryMediaTypes: ["*/*"],
     });
+
+    Tags.of(api).add("_custom_id_", "crudapp");
 
     const items = api.root.addResource('items');
     items.addMethod('GET', getAllIntegration);
