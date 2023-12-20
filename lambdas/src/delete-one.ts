@@ -1,9 +1,13 @@
-import * as AWS from 'aws-sdk';
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 
 const TABLE_NAME = process.env.TABLE_NAME || '';
 const PRIMARY_KEY = process.env.PRIMARY_KEY || '';
 
-const db = new AWS.DynamoDB.DocumentClient();
+const client = new DynamoDBClient({
+  endpoint: `${process.env.AWS_ENDPOINT_URL || ""}`,
+});
+const docClient = DynamoDBDocumentClient.from(client);
 
 export const handler = async (event: any = {}): Promise<any> => {
 
@@ -12,20 +16,16 @@ export const handler = async (event: any = {}): Promise<any> => {
     return { statusCode: 400, body: `Error: You are missing the path parameter id` };
   }
 
-  const params = {
+  const command = new DeleteCommand({
     TableName: TABLE_NAME,
     Key: {
       [PRIMARY_KEY]: requestedItemId
     }
-  };
+  });
 
   try {
-    const response = await db.get(params).promise();
-    if (response.Item) {
-      return { statusCode: 200, body: JSON.stringify(response.Item) };
-    } else {
-      return { statusCode: 404 };
-    }
+    await docClient.send(command);
+    return { statusCode: 200, body: '' };
   } catch (dbError) {
     return { statusCode: 500, body: JSON.stringify(dbError) };
   }
