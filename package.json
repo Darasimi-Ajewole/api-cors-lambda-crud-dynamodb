@@ -6,9 +6,10 @@
   "scripts": {
     "postinstall": "(cd lambdas && npm install);",
     "build": "tsc",
+    "build-watch": "esbuild lambdas/src/*.ts --bundle --minify --sourcemap --platform=node --target=es2020 --outdir=lambdas/build --watch",
     "watch": "tsc -w",
     "cdk": "cdk",
-    "local-deploy": "tsc && cdklocal bootstrap && cdklocal deploy"
+    "start": "tsc && cdklocal bootstrap && cdklocal deploy --require-approval never"
   },
   "author": {
     "name": "Aleksandar Simovic <alexander.simovic@gmail.com>",
@@ -16,9 +17,11 @@
   },
   "license": "Apache-2.0",
   "devDependencies": {
+    "@types/aws-lambda": "^8.10.130",
     "@types/node": "*",
     "aws-cdk": "*",
-    "esbuild": "*",
+    "aws-cdk-local": "^2.18.0",
+    "esbuild": "^0.19.10",
     "typescript": "~5.1.6"
   },
   "dependencies": {
