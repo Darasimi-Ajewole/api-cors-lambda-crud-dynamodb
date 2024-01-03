@@ -15,21 +15,47 @@ This an example of an APIGateway with CORS enabled, pointing to five Lambdas exe
 
 ## Build
 
-To build this app, you need to be in this example's root folder. Then run the following:
+To build this app, you need to be in root folder. Then run the following:
 
 ```bash
 npm install -g aws-cdk
-npm install
-npm run build
+make install
+make build-watch
 ```
 
 This will install the necessary CDK, then this example's dependencies, then the lambda functions' dependencies, and then build your TypeScript files and your CloudFormation template.
 
-## Deploy
+## Deploy to Localstack
 
-Run `cdk deploy`. This will deploy / redeploy your Stack to your AWS Account.
+If localstack is not runnning, Run `make up-localstack` to start up localstack, this requires docker installed on Machine.
 
-After the deployment you will see the API's URL, which represents the url you can then use.
+On a separate terminal, Run `make start`. This will deploy / redeploy your Stack to your localstack environment.
+
+After the deployment you will see the API's URL(http://crudapp.execute-api.localhost.localstack.cloud:4566/prod/), which represents the url you can then use.
+
+## Testing
+
+To create new entries in the DB, run the following:
+
+```bash
+curl --request POST \
+  --url http://crudapp.execute-api.localhost.localstack.cloud:4566/prod/items \
+  --header 'Content-Type: application/json' \
+  --data '{"Product":"Cancer treatment","Inventory":10000000000}'
+
+curl --request POST \
+     --url http://crudapp.execute-api.localhost.localstack.cloud:4566/prod/items \
+     --header 'Content-Type: application/json'   \
+     --data '{"Product":"Insulin","Inventory":90000000000}'
+```
+
+To fetch all entries:
+
+```bash
+curl https://crudapp.execute-api.localhost.localstack.cloud:4566/local/items
+```
+
+The above should have an output similar to: `[{"Product":"Cancer treatment"...`
 
 ## The Component Structure
 
@@ -43,24 +69,3 @@ The whole component contains:
 - Lambda pointing to `lambdas/update-one.ts`, containing code for __updating an item__ in the DynamoDB table.
 - A DynamoDB table `items` that stores the data.
 - Five `LambdaIntegrations` that connect these Lambdas to the API.
-
-## CDK Toolkit
-
-The [`cdk.json`](./cdk.json) file in the root of this repository includes
-instructions for the CDK toolkit on how to execute this program.
-
-After building your TypeScript code, you will be able to run the CDK toolkit commands as usual:
-
-```bash
-    $ cdk ls
-    <list all stacks in this program>
-
-    $ cdk synth
-    <generates and outputs cloudformation template>
-
-    $ cdk deploy
-    <deploys stack to your account>
-
-    $ cdk diff
-    <shows diff against deployed stack>
-```
