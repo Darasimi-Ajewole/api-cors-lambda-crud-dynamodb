@@ -7,6 +7,7 @@ const PRIMARY_KEY = process.env.PRIMARY_KEY || "";
 const client = new DynamoDBClient({
   endpoint: `${process.env.AWS_ENDPOINT_URL || ""}`,
 });
+
 const docClient = DynamoDBDocumentClient.from(client);
 
 export const handler = async (event: any = {}): Promise<any> => {
@@ -30,7 +31,7 @@ export const handler = async (event: any = {}): Promise<any> => {
     if (response.Item) {
       return { statusCode: 200, body: JSON.stringify(response.Item) };
     } else {
-      return { statusCode: 404 };
+      return { statusCode: 404, body: "Not Found" };
     }
   } catch (dbError) {
     return { statusCode: 500, body: JSON.stringify(dbError) };

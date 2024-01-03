@@ -1,5 +1,9 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, UpdateCommand, UpdateCommandInput } from "@aws-sdk/lib-dynamodb";
+import {
+  DynamoDBDocumentClient,
+  UpdateCommand,
+  UpdateCommandInput,
+} from "@aws-sdk/lib-dynamodb";
 
 const TABLE_NAME = process.env.TABLE_NAME || "";
 const PRIMARY_KEY = process.env.PRIMARY_KEY || "";

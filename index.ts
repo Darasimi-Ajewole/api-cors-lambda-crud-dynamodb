@@ -1,10 +1,13 @@
 import { IResource, LambdaIntegration, MockIntegration, PassthroughBehavior, RestApi } from 'aws-cdk-lib/aws-apigateway';
 import { AttributeType, Table } from 'aws-cdk-lib/aws-dynamodb';
-import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
+import { Architecture, Code, Function, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { App, Stack, RemovalPolicy, Tags } from 'aws-cdk-lib';
 import { NodejsFunction, NodejsFunctionProps } from 'aws-cdk-lib/aws-lambda-nodejs';
-import { join } from 'path'
+import { join, basename } from 'path'
+import { Bucket } from 'aws-cdk-lib/aws-s3';
+import { Construct } from 'constructs';
 
+const STAGE = process.env.STAGE  ?? 'local'
 export class ApiLambdaCrudDynamoDBStack extends Stack {
   constructor(app: App, id: string) {
     super(app, id);
@@ -37,26 +40,29 @@ export class ApiLambdaCrudDynamoDBStack extends Stack {
       },
       architecture: Architecture.ARM_64,
       runtime: Runtime.NODEJS_18_X,
-    }
+    }    
 
     // Create a Lambda function for each of the CRUD operations
-    const getOneLambda = new NodejsFunction(this, 'getOneItemFunction', {
+    const getOneLambda = ApplicationFunction(this, 'getOneItemFunction', {
       entry: join(__dirname, 'lambdas/src', 'get-one.ts'),
       ...nodeJsFunctionProps,
     });
-    const getAllLambda = new NodejsFunction(this, 'getAllItemsFunction', {
+
+    const getAllLambda = ApplicationFunction(this, 'getAllItemsFunction', {
       entry: join(__dirname, 'lambdas/src', 'get-all.ts'),
       ...nodeJsFunctionProps,
     });
-    const createOneLambda = new NodejsFunction(this, 'createItemFunction', {
+
+
+    const createOneLambda = ApplicationFunction(this, 'createItemFunction', {
       entry: join(__dirname, 'lambdas/src', 'create.ts'),
       ...nodeJsFunctionProps,
     });
-    const updateOneLambda = new NodejsFunction(this, 'updateItemFunction', {
+    const updateOneLambda = ApplicationFunction(this, 'updateItemFunction', {
       entry: join(__dirname, 'lambdas/src', 'update-one.ts'),
       ...nodeJsFunctionProps,
     });
-    const deleteOneLambda = new NodejsFunction(this, 'deleteItemFunction', {
+    const deleteOneLambda = ApplicationFunction(this, 'deleteItemFunction', {
       entry: join(__dirname, 'lambdas/src', 'delete-one.ts'),
       ...nodeJsFunctionProps,
     });
@@ -127,6 +133,27 @@ export function addCorsOptions(apiResource: IResource) {
       },
     }]
   })
+}
+
+export function ApplicationFunction(scope: Construct, id: string, props: NodejsFunctionProps ) {
+  if (STAGE=== 'local') {
+    return LocalFunction(scope, id, props)
+  }
+  return new NodejsFunction(scope, id, props)
+}
+
+export function LocalFunction(scope: Construct, id: string, props: NodejsFunctionProps ) {
+  const hotReloadBucket = Bucket.fromBucketName(scope, `HotReloadingBucket-${id}`, 'hot-reload');
+  const fileName = basename(props.entry!, '.ts');
+  const handler = props.handler ?? 'handler'
+  const runtime = props.runtime ||  Runtime.NODEJS_18_X;
+
+  return  new Function(scope, id, {
+    ...props,
+    code: Code.fromBucket(hotReloadBucket, join(__dirname, 'lambdas/build' )),
+    runtime,
+    handler: `${fileName}.${handler}`,
+  });
 }
 
 const app = new App();
